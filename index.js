@@ -53,9 +53,9 @@ async function exampleGenerateText() {
   
   const provider = createProvider();
   const model = PROVIDER === 'anthropic' 
-    ? provider('claude-3-5-sonnet-20241022')
+    ? provider('claude-sonnet-4-5-20250929')
     : provider('gpt-4o-mini');
-  
+
   const { text, usage } = await generateText({
     model,
     prompt: 'Explain what content-addressable storage is in one sentence.',
@@ -71,9 +71,9 @@ async function exampleStreamText() {
   
   const provider = createProvider();
   const model = PROVIDER === 'anthropic'
-    ? provider('claude-3-5-sonnet-20241022')
+    ? provider('claude-sonnet-4-5-20250929')
     : provider('gpt-4o-mini');
-  
+
   const result = streamText({
     model,
     prompt: 'Write a haiku about debugging code.',
@@ -96,9 +96,9 @@ async function exampleConversation() {
   
   const provider = createProvider();
   const model = PROVIDER === 'anthropic'
-    ? provider('claude-3-5-sonnet-20241022')
+    ? provider('claude-sonnet-4-5-20250929')
     : provider('gpt-4o-mini');
-  
+
   const messages = [
     { role: 'user', content: 'My name is Alice.' },
   ];
