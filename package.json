@@ -1,0 +1,15 @@
+{
+  "name": "tapes-ai-sdk-example",
+  "version": "0.1.0",
+  "description": "POC: Vercel AI SDK integration with Tapes proxy",
+  "type": "module",
+  "scripts": {
+    "dev": "node index.js",
+    "chat": "node chat.js"
+  },
+  "dependencies": {
+    "ai": "^4.0.0",
+    "@ai-sdk/openai": "^1.0.0",
+    "@ai-sdk/anthropic": "^1.0.0"
+  }
+}
