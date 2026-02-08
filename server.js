@@ -10,7 +10,7 @@
  */
 
 import express from 'express';
-import { streamText } from 'ai';
+import { generateText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createTapesFetch } from './tapes-fetch.js';
@@ -46,7 +46,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // POST /api/chat — streaming chat endpoint
 app.post('/api/chat', async (req, res) => {
-  const { message, sessionId } = req.body;
+  const { sessionId } = req.body;
+  const message = (req.body.message || '').trim();
 
   if (!message || !sessionId) {
     return res.status(400).json({ error: 'message and sessionId are required' });
@@ -61,26 +62,20 @@ app.post('/api/chat', async (req, res) => {
 
   try {
     const model = createModel(sessionId);
-    const result = streamText({
+    const { text } = await generateText({
       model,
       messages,
       system: 'You are a helpful assistant. Be concise.',
     });
 
-    // Collect the full response for conversation history
-    let fullResponse = '';
-
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    res.setHeader('Transfer-Encoding', 'chunked');
-    res.setHeader('Cache-Control', 'no-cache');
-
-    for await (const chunk of result.textStream) {
-      fullResponse += chunk;
-      res.write(chunk);
+    if (text) {
+      messages.push({ role: 'assistant', content: text });
+    } else {
+      messages.pop();
     }
 
-    messages.push({ role: 'assistant', content: fullResponse });
-    res.end();
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.end(text);
   } catch (error) {
     console.error('Chat error:', error.message);
     // Remove the failed user message
