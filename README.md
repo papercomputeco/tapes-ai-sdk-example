@@ -176,6 +176,46 @@ tapes log
 tapes checkout <hash>
 ```
 
+## Storage Schema
+
+Tapes stores all recorded data in a SQLite database at `~/.tapes/tapes.sqlite`.
+
+### `nodes` table
+
+The primary table — each row is a message node in a conversation tree:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `hash` | text (PK) | Content-addressable identifier |
+| `parent_hash` | text (FK → nodes) | Links to parent message, forming conversation trees |
+| `role` | text | `user`, `assistant`, or `system` |
+| `content` | json | Full message JSON with metadata |
+| `model` | text | e.g. `gpt-4o-mini`, `claude-sonnet-4-5-20250929` |
+| `provider` | text | e.g. `openai`, `anthropic` |
+| `prompt_tokens` | integer | Input token count |
+| `completion_tokens` | integer | Output token count |
+| `total_tokens` | integer | Combined token count |
+| `total_duration_ns` | integer | Total request duration in nanoseconds |
+| `prompt_duration_ns` | integer | Time-to-first-token in nanoseconds |
+| `stop_reason` | text | e.g. `end_turn`, `max_tokens` |
+| `bucket` | json | Grouping/tagging metadata |
+| `type` | text | Node type classifier |
+| `created_at` | datetime | Timestamp (defaults to current time) |
+
+Indexed on `parent_hash`, `role`, `model`, `provider`, and `(role, model)`.
+
+### Conversation structure
+
+Messages form a directed acyclic graph (DAG) via `parent_hash` references:
+- **Root nodes** (`parent_hash` is null) are conversation starts
+- **Branching** — multiple children can share a parent, enabling conversation forks
+- **Checkpointing** — `tapes checkout <hash>` restores any previous state
+- **Replay** — walk the DAG to replay or inspect conversation history
+
+### Vector search
+
+The `vec_embeddings` table stores 768-dimensional float vectors for semantic search, linked to nodes via the `vec_documents` table. Query with `tapes search "your query"`.
+
 ## Files
 
 - `tapes/ai.js` - Pre-configured provider wrapper (main entry point)
