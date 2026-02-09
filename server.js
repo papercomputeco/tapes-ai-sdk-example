@@ -11,34 +11,16 @@
 
 import express from 'express';
 import { generateText } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
-import { createAnthropic } from '@ai-sdk/anthropic';
-import { createTapesFetch } from './tapes-fetch.js';
+import { createSessionModel, config } from './tapes/ai.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const PORT = process.env.PORT || 3000;
-const TAPES_PROXY_URL = process.env.TAPES_PROXY_URL || 'http://localhost:8080';
-const PROVIDER = process.env.PROVIDER || 'openai';
-const MODEL = process.env.MODEL || (PROVIDER === 'anthropic' ? 'claude-sonnet-4-5-20250929' : 'gpt-4o-mini');
 
 // Per-session conversation storage (keyed by session ID)
 const sessions = new Map();
-
-function createModel(sessionId) {
-  const tapesFetch = createTapesFetch({
-    proxyUrl: TAPES_PROXY_URL,
-    headers: { 'X-Tapes-Session': sessionId },
-  });
-
-  const provider = PROVIDER === 'anthropic'
-    ? createAnthropic({ fetch: tapesFetch, apiKey: process.env.ANTHROPIC_API_KEY })
-    : createOpenAI({ fetch: tapesFetch, apiKey: process.env.OPENAI_API_KEY });
-
-  return provider(MODEL);
-}
 
 const app = express();
 app.use(express.json());
@@ -61,7 +43,7 @@ app.post('/api/chat', async (req, res) => {
   messages.push({ role: 'user', content: message });
 
   try {
-    const model = createModel(sessionId);
+    const model = createSessionModel(sessionId);
     const { text } = await generateText({
       model,
       messages,
@@ -101,7 +83,7 @@ app.listen(PORT, () => {
   console.log(`\n  Tapes Chat UI`);
   console.log(`  ─────────────────────────`);
   console.log(`  URL:      http://localhost:${PORT}`);
-  console.log(`  Provider: ${PROVIDER}`);
-  console.log(`  Model:    ${MODEL}`);
-  console.log(`  Proxy:    ${TAPES_PROXY_URL}\n`);
+  console.log(`  Provider: ${config.provider}`);
+  console.log(`  Model:    ${config.model}`);
+  console.log(`  Proxy:    ${config.proxyUrl}\n`);
 });

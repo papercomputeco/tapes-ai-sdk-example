@@ -61,60 +61,70 @@ export PROVIDER=anthropic
 ### 5. Run
 
 ```bash
-# Web chat UI
+# Smoke test + start server (runs examples, then chat, then web UI)
 npm start
-# Open http://localhost:3000
 
-# CLI chat
-npm run chat
-
-# Run all demo examples
-npm run dev
+# Or run individually:
+npm run dev      # examples only
+npm run chat     # interactive CLI chat
+npm run server   # web UI only
 ```
 
 ## Usage
 
-### Basic Integration
+### Using the Provider Wrapper
+
+The `tapes/ai.js` module centralizes all proxy and provider configuration:
 
 ```javascript
-import { generateText } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
-import { createTapesFetch } from './tapes-fetch.js';
+// Pre-configured singletons (reads env vars at import time)
+import { model, config } from './tapes/ai.js';
 
-// Create Tapes-wrapped fetch
-const tapesFetch = createTapesFetch({
-  proxyUrl: 'http://localhost:8080',
-  headers: {
-    'X-Tapes-Session': 'my-session-id', // Optional: track sessions
-  },
-});
-
-// Create provider with custom fetch
-const openai = createOpenAI({
-  fetch: tapesFetch,
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-// Use normally - requests are now recorded by Tapes!
 const { text } = await generateText({
-  model: openai('gpt-4o-mini'),
+  model,
   prompt: 'Hello, world!',
 });
 ```
 
-### With Anthropic
+### Per-Session Models
+
+For server use where each request needs its own session tracking:
 
 ```javascript
-import { createAnthropic } from '@ai-sdk/anthropic';
+import { createSessionModel } from './tapes/ai.js';
 
-const anthropic = createAnthropic({
-  fetch: tapesFetch,
-  apiKey: process.env.ANTHROPIC_API_KEY,
+const model = createSessionModel('user-123-chat');
+```
+
+### Full Customization
+
+```javascript
+import { createTapesProvider } from './tapes/ai.js';
+
+const { provider, model } = createTapesProvider({
+  sessionId: 'my-session',
+  provider: 'anthropic',
+  model: 'claude-sonnet-4-5-20250929',
+  debug: true,
+});
+```
+
+### Low-Level Fetch Wrapper
+
+For direct control, use `tapes-fetch.js` directly:
+
+```javascript
+import { createTapesFetch } from './tapes-fetch.js';
+import { createOpenAI } from '@ai-sdk/openai';
+
+const tapesFetch = createTapesFetch({
+  proxyUrl: 'http://localhost:8080',
+  headers: { 'X-Tapes-Session': 'my-session-id' },
 });
 
-const { text } = await generateText({
-  model: anthropic('claude-sonnet-4-5-20250929'),
-  prompt: 'Hello!',
+const openai = createOpenAI({
+  fetch: tapesFetch,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 ```
 
@@ -168,11 +178,22 @@ tapes checkout <hash>
 
 ## Files
 
-- `server.js` - Express web server with `/api/chat` endpoint
-- `public/index.html` - Browser chat UI
-- `tapes-fetch.js` - Custom fetch wrapper for Tapes proxy
-- `index.js` - Example usage (generateText, streamText, multi-turn)
+- `tapes/ai.js` - Pre-configured provider wrapper (main entry point)
+- `tapes-fetch.js` - Low-level custom fetch wrapper for Tapes proxy
+- `index.js` - Example usage (generateText, multi-turn conversation)
 - `chat.js` - Interactive CLI chat
+- `server.js` - Express web server with chat UI
+- `public/index.html` - Web chat interface
+
+## Known Limitations
+
+- **Streaming through proxy**: The Tapes proxy currently strips `\n\n` SSE delimiters, which breaks `streamText()`. Use `generateText()` for now. An upstream fix is needed in the Tapes proxy.
+
+## Next Steps
+
+- [ ] Fix Tapes proxy SSE streaming support
+- [ ] Test with other AI SDK providers (Google, Mistral, etc.)
+- [ ] Create Next.js example with API routes
 
 ## License
 

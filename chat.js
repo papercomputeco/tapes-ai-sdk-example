@@ -10,27 +10,10 @@
 
 import * as readline from 'readline';
 import { streamText } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
-import { createAnthropic } from '@ai-sdk/anthropic';
-import { createTapesFetch } from './tapes-fetch.js';
+import { createTapesProvider, config } from './tapes/ai.js';
 
-const TAPES_PROXY_URL = process.env.TAPES_PROXY_URL || 'http://localhost:8080';
-const PROVIDER = process.env.PROVIDER || 'openai';
-const MODEL = process.env.MODEL || (PROVIDER === 'anthropic' ? 'claude-sonnet-4-5-20250929' : 'gpt-4o-mini');
 const SESSION_ID = `chat-${Date.now()}`;
-
-// Create Tapes-wrapped fetch
-const tapesFetch = createTapesFetch({
-  proxyUrl: TAPES_PROXY_URL,
-  headers: { 'X-Tapes-Session': SESSION_ID },
-});
-
-// Create provider
-const provider = PROVIDER === 'anthropic'
-  ? createAnthropic({ fetch: tapesFetch, apiKey: process.env.ANTHROPIC_API_KEY })
-  : createOpenAI({ fetch: tapesFetch, apiKey: process.env.OPENAI_API_KEY });
-
-const model = provider(MODEL);
+const { model } = createTapesProvider({ sessionId: SESSION_ID });
 const messages = [];
 
 // CLI interface
@@ -43,8 +26,8 @@ console.log('╔═════════════════════�
 console.log('║          Tapes Chat (AI SDK Integration)               ║');
 console.log('╚════════════════════════════════════════════════════════╝');
 console.log(`\n📼 Session: ${SESSION_ID}`);
-console.log(`🤖 Model: ${MODEL}`);
-console.log(`🔗 Proxy: ${TAPES_PROXY_URL}`);
+console.log(`🤖 Model: ${config.model}`);
+console.log(`🔗 Proxy: ${config.proxyUrl}`);
 console.log('\nType your message (or "exit" to quit, "clear" to reset)\n');
 
 async function chat(userInput) {

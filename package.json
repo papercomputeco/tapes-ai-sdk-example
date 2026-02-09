@@ -4,9 +4,10 @@
   "description": "POC: Vercel AI SDK integration with Tapes proxy",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
+    "start": "node index.js && echo exit | node chat.js && node server.js",
     "dev": "node index.js",
-    "chat": "node chat.js"
+    "chat": "node chat.js",
+    "server": "node server.js"
   },
   "dependencies": {
     "ai": "^4.0.0",
