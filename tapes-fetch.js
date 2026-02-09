@@ -83,7 +83,7 @@ export function createTapesFetch(config) {
     if (debug) {
       console.log(`[tapes] Response: ${response.status} ${response.statusText}`);
     }
-    
+
     return response;
   };
 }

@@ -16,7 +16,7 @@ import { createTapesFetch } from './tapes-fetch.js';
 
 const TAPES_PROXY_URL = process.env.TAPES_PROXY_URL || 'http://localhost:8080';
 const PROVIDER = process.env.PROVIDER || 'openai';
-const MODEL = process.env.MODEL || (PROVIDER === 'anthropic' ? 'claude-3-5-sonnet-20241022' : 'gpt-4o-mini');
+const MODEL = process.env.MODEL || (PROVIDER === 'anthropic' ? 'claude-sonnet-4-5-20250929' : 'gpt-4o-mini');
 const SESSION_ID = `chat-${Date.now()}`;
 
 // Create Tapes-wrapped fetch
