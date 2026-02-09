@@ -58,14 +58,18 @@ export ANTHROPIC_API_KEY=sk-ant-...
 export PROVIDER=anthropic
 ```
 
-### 5. Run Examples
+### 5. Run
 
 ```bash
-# Run all examples
-npm run dev
+# Web chat UI
+npm start
+# Open http://localhost:3000
 
-# Or interactive chat
+# CLI chat
 npm run chat
+
+# Run all demo examples
+npm run dev
 ```
 
 ## Usage
@@ -98,21 +102,6 @@ const { text } = await generateText({
 });
 ```
 
-### Streaming
-
-```javascript
-import { streamText } from 'ai';
-
-const result = streamText({
-  model: openai('gpt-4o-mini'),
-  prompt: 'Write a story...',
-});
-
-for await (const chunk of result.textStream) {
-  process.stdout.write(chunk);
-}
-```
-
 ### With Anthropic
 
 ```javascript
@@ -124,10 +113,14 @@ const anthropic = createAnthropic({
 });
 
 const { text } = await generateText({
-  model: anthropic('claude-3-5-sonnet-20241022'),
+  model: anthropic('claude-sonnet-4-5-20250929'),
   prompt: 'Hello!',
 });
 ```
+
+### Web Chat UI
+
+The `npm start` command launches an Express server with a browser-based chat interface at `http://localhost:3000`. It uses `generateText` to send requests through the Tapes proxy and renders responses in a dark-themed chat UI with session tracking and conversation clearing.
 
 ## Configuration
 
@@ -137,7 +130,8 @@ const { text } = await generateText({
 |----------|---------|-------------|
 | `TAPES_PROXY_URL` | `http://localhost:8080` | Tapes proxy address |
 | `PROVIDER` | `openai` | LLM provider (`openai` or `anthropic`) |
-| `MODEL` | `gpt-4o-mini` | Model to use |
+| `MODEL` | `gpt-4o-mini` / `claude-sonnet-4-5-20250929` | Model to use |
+| `PORT` | `3000` | Web UI server port |
 | `DEBUG` | `false` | Enable debug logging |
 | `OPENAI_API_KEY` | - | OpenAI API key |
 | `ANTHROPIC_API_KEY` | - | Anthropic API key |
@@ -174,24 +168,11 @@ tapes checkout <hash>
 
 ## Files
 
+- `server.js` - Express web server with `/api/chat` endpoint
+- `public/index.html` - Browser chat UI
 - `tapes-fetch.js` - Custom fetch wrapper for Tapes proxy
 - `index.js` - Example usage (generateText, streamText, multi-turn)
 - `chat.js` - Interactive CLI chat
-- `package.json` - Dependencies
-
-## Next Steps
-
-- [ ] Add retry/failover handling
-- [ ] Test with other AI SDK providers (Google, Mistral, etc.)
-- [ ] Add streaming response recording verification
-- [ ] Create Next.js example with API routes
-- [ ] Document Tapes storage schema for AI SDK metadata
-
-## Questions for AI SDK Team
-
-1. Is `fetch` override the recommended integration point?
-2. Are there plans for official observability/telemetry hooks?
-3. Any gotchas with streaming that we should handle?
 
 ## License
 
