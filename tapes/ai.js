@@ -21,6 +21,10 @@ const DEFAULTS = {
   provider: process.env.PROVIDER || 'openai',
   model: process.env.MODEL,
   debug: process.env.DEBUG === 'true',
+  retry: {
+    maxAttempts: parseInt(process.env.TAPES_RETRY_ATTEMPTS, 10) || 3,
+  },
+  failover: process.env.TAPES_FAILOVER === 'true',
 };
 
 function defaultModel(providerName) {
@@ -39,6 +43,8 @@ function defaultModel(providerName) {
  * @param {boolean} [opts.debug]      — enable fetch debug logging
  * @param {string}  [opts.proxyUrl]   — Tapes proxy URL
  * @param {Record<string,string>} [opts.headers] — extra headers
+ * @param {import('../tapes-fetch.js').RetryConfig} [opts.retry] — retry config
+ * @param {boolean} [opts.failover]  — failover to direct URL on proxy failure
  * @returns {{ provider: Function, model: import('ai').LanguageModel }}
  */
 export function createTapesProvider(opts = {}) {
@@ -47,9 +53,14 @@ export function createTapesProvider(opts = {}) {
   const proxyUrl = opts.proxyUrl ?? DEFAULTS.proxyUrl;
   const debug = opts.debug ?? DEFAULTS.debug;
 
+  const retry = opts.retry ?? DEFAULTS.retry;
+  const failover = opts.failover ?? DEFAULTS.failover;
+
   const tapesFetch = createTapesFetch({
     proxyUrl,
     debug,
+    retry,
+    failover,
     headers: {
       ...(opts.sessionId ? { 'X-Tapes-Session': opts.sessionId } : {}),
       ...opts.headers,
@@ -92,4 +103,6 @@ export const config = Object.freeze({
   provider: DEFAULTS.provider,
   model: defaultModel(DEFAULTS.provider),
   debug: DEFAULTS.debug,
+  retry: DEFAULTS.retry,
+  failover: DEFAULTS.failover,
 });

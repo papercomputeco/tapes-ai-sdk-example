@@ -143,8 +143,30 @@ The `npm start` command launches an Express server with a browser-based chat int
 | `MODEL` | `gpt-4o-mini` / `claude-sonnet-4-5-20250929` | Model to use |
 | `PORT` | `3000` | Web UI server port |
 | `DEBUG` | `false` | Enable debug logging |
+| `TAPES_RETRY_ATTEMPTS` | `3` | Max retry attempts for proxy requests |
+| `TAPES_FAILOVER` | `false` | Failover to direct provider URL on proxy failure |
 | `OPENAI_API_KEY` | - | OpenAI API key |
 | `ANTHROPIC_API_KEY` | - | Anthropic API key |
+
+### Retry & Failover
+
+Requests through the Tapes proxy automatically retry on network errors (`ECONNREFUSED`, `ECONNRESET`, `ETIMEDOUT`) and HTTP 502/503/504 responses using exponential backoff.
+
+When `failover` is enabled and all proxy retries are exhausted, one final attempt is made directly to the LLM provider, bypassing the proxy. This keeps your app functional even when the Tapes proxy is down.
+
+```javascript
+const { model } = createTapesProvider({
+  retry: { maxAttempts: 5, initialDelayMs: 1000, maxDelayMs: 10000 },
+  failover: true,
+});
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `retry.maxAttempts` | `3` | Total attempts before giving up |
+| `retry.initialDelayMs` | `500` | First retry delay (doubles each attempt) |
+| `retry.maxDelayMs` | `5000` | Maximum delay between retries |
+| `failover` | `false` | Bypass proxy as a last resort |
 
 ### Custom Headers
 
