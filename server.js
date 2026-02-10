@@ -10,7 +10,7 @@
  */
 
 import express from 'express';
-import { generateText } from 'ai';
+import { streamText } from 'ai';
 import { createSessionModel, config } from './tapes/ai.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
@@ -44,20 +44,27 @@ app.post('/api/chat', async (req, res) => {
 
   try {
     const model = createSessionModel(sessionId);
-    const { text } = await generateText({
+    const result = streamText({
       model,
       messages,
       system: 'You are a helpful assistant. Be concise.',
     });
 
-    if (text) {
-      messages.push({ role: 'assistant', content: text });
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+
+    let fullText = '';
+    for await (const chunk of result.textStream) {
+      fullText += chunk;
+      res.write(chunk);
+    }
+
+    if (fullText) {
+      messages.push({ role: 'assistant', content: fullText });
     } else {
       messages.pop();
     }
 
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    res.end(text);
+    res.end();
   } catch (error) {
     console.error('Chat error:', error.message);
     // Remove the failed user message
