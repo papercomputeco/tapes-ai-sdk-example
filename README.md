@@ -130,7 +130,7 @@ const openai = createOpenAI({
 
 ### Web Chat UI
 
-The `npm start` command launches an Express server with a browser-based chat interface at `http://localhost:3000`. It uses `generateText` to send requests through the Tapes proxy and renders responses in a dark-themed chat UI with session tracking and conversation clearing.
+The `npm run server` command launches an Express server with a browser-based chat interface at `http://localhost:3000`. It uses `streamText` to stream responses in real-time through the Tapes proxy and renders them in a dark-themed chat UI with session tracking and conversation clearing.
 
 ## Configuration
 
@@ -242,20 +242,10 @@ The `vec_embeddings` table stores 768-dimensional float vectors for semantic sea
 
 - `tapes/ai.js` - Pre-configured provider wrapper (main entry point)
 - `tapes-fetch.js` - Low-level custom fetch wrapper for Tapes proxy
-- `index.js` - Example usage (generateText, multi-turn conversation)
+- `index.js` - Example usage (generateText, streamText, multi-turn conversation)
 - `chat.js` - Interactive CLI chat
 - `server.js` - Express web server with chat UI
 - `public/index.html` - Web chat interface
-
-## Known Limitations
-
-- **Streaming through proxy**: The Tapes proxy currently strips `\n\n` SSE delimiters, which breaks `streamText()`. Use `generateText()` for now. An upstream fix is needed in the Tapes proxy.
-
-## Next Steps
-
-- [ ] Fix Tapes proxy SSE streaming support
-- [ ] Test with other AI SDK providers (Google, Mistral, etc.)
-- [ ] Create Next.js example with API routes
 
 ## License
 

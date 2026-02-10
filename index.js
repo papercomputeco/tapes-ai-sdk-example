@@ -10,7 +10,7 @@
  *   3. Run: `npm run dev`
  */
 
-import { generateText } from 'ai';
+import { generateText, streamText } from 'ai';
 import { model, config } from './tapes/ai.js';
 
 // Example 1: Simple text generation
@@ -26,9 +26,25 @@ async function exampleGenerateText() {
   console.log('Usage:', usage);
 }
 
-// Example 2: Multi-turn conversation
+// Example 2: Streaming text generation
+async function exampleStreamText() {
+  console.log('\n🌊 Example 2: streamText()\n');
+
+  process.stdout.write('Response: ');
+  const result = streamText({
+    model,
+    prompt: 'What is a merkle tree? One sentence.',
+  });
+
+  for await (const chunk of result.textStream) {
+    process.stdout.write(chunk);
+  }
+  console.log('\n');
+}
+
+// Example 3: Multi-turn conversation
 async function exampleConversation() {
-  console.log('\n💬 Example 2: Multi-turn conversation\n');
+  console.log('\n💬 Example 3: Multi-turn conversation\n');
 
   const messages = [
     { role: 'user', content: 'My name is Alice.' },
@@ -66,6 +82,7 @@ async function main() {
   
   try {
     await exampleGenerateText();
+    await exampleStreamText();
     await exampleConversation();
     
     console.log('\n✅ All examples completed!');
