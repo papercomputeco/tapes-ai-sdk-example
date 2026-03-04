@@ -19,10 +19,10 @@ This integration routes AI SDK requests through a local Tapes proxy for:
 └─────────────┘      └─────────────┘      └─────────────────┘
                             │
                             ▼
-                     ┌─────────────┐
-                     │   SQLite    │
-                     │  (storage)  │
-                     └─────────────┘
+                   ┌─────────────────┐
+                   │ PostgreSQL /    │
+                   │ SQLite (storage)│
+                   └─────────────────┘
 ```
 
 ## Quick Start
@@ -36,7 +36,10 @@ curl -fsSL https://download.tapes.dev/install | bash
 ### 2. Start Tapes Services
 
 ```bash
-# In terminal 1: Start Tapes server
+# Recommended: Start Tapes with PostgreSQL storage
+tapes serve --postgres "postgres://user:pass@localhost:5432/tapes"
+
+# Or use the default SQLite storage
 tapes serve
 ```
 
@@ -145,6 +148,7 @@ The `npm run server` command launches an Express server with a browser-based cha
 | `DEBUG` | `false` | Enable debug logging |
 | `TAPES_RETRY_ATTEMPTS` | `3` | Max retry attempts for proxy requests |
 | `TAPES_FAILOVER` | `false` | Failover to direct provider URL on proxy failure |
+| `TAPES_POSTGRES_DSN` | - | PostgreSQL connection string (e.g. `postgres://user:pass@localhost:5432/tapes`) |
 | `OPENAI_API_KEY` | - | OpenAI API key |
 | `ANTHROPIC_API_KEY` | - | Anthropic API key |
 
@@ -183,6 +187,29 @@ const tapesFetch = createTapesFetch({
 });
 ```
 
+## Storage
+
+Tapes supports three storage backends:
+
+| Backend | Flag | Best for |
+|---------|------|----------|
+| **PostgreSQL** | `--postgres "dsn"` | Production, team environments, persistent storage |
+| **SQLite** | *(default)* | Local development, single-user setups |
+| **In-memory** | `--memory` | Testing, ephemeral sessions |
+
+PostgreSQL is the recommended default for anything beyond local experimentation. Pass the DSN via the CLI flag or set `TAPES_POSTGRES_DSN` in your environment:
+
+```bash
+# Via CLI flag
+tapes serve --postgres "postgres://user:pass@localhost:5432/tapes"
+
+# Or via env var
+export TAPES_POSTGRES_DSN="postgres://user:pass@localhost:5432/tapes"
+tapes serve --postgres "$TAPES_POSTGRES_DSN"
+```
+
+For remote providers, team setup, and managed Postgres options, see the [PostgreSQL Storage guide](https://tapes.dev/guides/storage) on tapes.dev.
+
 ## Querying Recorded Data
 
 After running conversations through Tapes:
@@ -200,7 +227,7 @@ tapes checkout <hash>
 
 ## Storage Schema
 
-Tapes stores all recorded data in a SQLite database at `~/.tapes/tapes.sqlite`.
+Tapes stores all recorded data in either PostgreSQL or SQLite (at `~/.tapes/tapes.sqlite` for local). The schema is the same for both backends.
 
 ### `nodes` table
 

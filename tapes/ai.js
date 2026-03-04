@@ -25,6 +25,7 @@ const DEFAULTS = {
     maxAttempts: parseInt(process.env.TAPES_RETRY_ATTEMPTS, 10) || 3,
   },
   failover: process.env.TAPES_FAILOVER === 'true',
+  postgresDsn: process.env.TAPES_POSTGRES_DSN || '',
 };
 
 function defaultModel(providerName) {
@@ -105,4 +106,6 @@ export const config = Object.freeze({
   debug: DEFAULTS.debug,
   retry: DEFAULTS.retry,
   failover: DEFAULTS.failover,
+  postgresDsn: DEFAULTS.postgresDsn,
+  storage: DEFAULTS.postgresDsn ? 'postgresql' : 'sqlite',
 });
